@@ -56,7 +56,7 @@ Este proyecto nace como un MVP (Producto Mínimo Viable) con un gran potencial d
 
 
 👤 Autor
-Alejandro Tamayo - Desarrollador y Analista de Soporte - [[Tu GitHub Profile](https://github.com/Adaptaweb)]
+Alejandro Tamayo - Desarrollador y Analista de Soporte - [https://github.com/Adaptaweb]
 
 Proyecto desarrollado con fines educativos y de organización familiar.
 
