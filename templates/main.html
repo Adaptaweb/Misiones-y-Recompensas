@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Tareas Matias</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
+    <style>
+        @import url('https://fonts.cdnfonts.com/css/minecraftia');
+        body { 
+            font-family: 'Minecraftia', sans-serif; text-align: center; 
+            background-image: url('/static/fondo_titulo.webp'); background-size: cover;
+            background-position: center; background-attachment: fixed; background-color: #333;
+            color: white; text-shadow: 2px 2px #000;
+            margin: 0; padding: 30px 10px; box-sizing: border-box;
+            min-height: 100vh; overflow-x: hidden; overflow-y: auto;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            transition: all 0.5s;
+        }
+        body.fail-mode { background-color: #550000 !important; background-blend-mode: multiply; }
+        body.fail-mode .container { border-color: #AA0000; background: rgba(85, 0, 0, 0.85); }
+        body.victory-mode { background-color: #1a0033 !important; background-blend-mode: overlay; }
+        body.victory-mode .container { border-color: #fdfd12; box-shadow: 0 0 30px #fdfd12; animation: pulse-win 1.5s infinite; }
+        
+        .datetime-display { font-size: 14px; color: #FFFFFF; margin-bottom: 5px; }
+        .xp-container { width: 100%; max-width: 350px; margin-bottom: 15px; position: relative; }
+        .xp-bar-bg { background: #1a1a1a; height: 14px; border: 2px solid #555; position: relative; }
+        .xp-bar-fill { background: #55FF55; height: 100%; width: 0%; transition: width 0.8s ease-in-out; box-shadow: 0 0 10px #55FF55; }
+        .xp-info { display: flex; justify-content: space-between; font-size: 10px; color: #55FF55; margin-top: 3px; }
+        .xp-level { color: #55FF55; font-size: 18px; margin-top: 2px; }
+        .tareas-counter { font-size: 18px; color: #fdfd12; margin-bottom: 15px; }
+        
+        .container { background: rgba(0, 0, 0, 0.75); padding: 20px; border: 4px solid #555; max-width: 500px; width: 95%; box-sizing: border-box; transition: all 0.5s; position: relative; z-index: 10; margin-bottom: 20px; }
+        h1 { color: #fdfd12; font-size: 18px; margin-bottom: 15px; }
+        
+        .btn { 
+            background: #707070; color: white; padding: 12px; border: 3px solid #000;
+            border-top-color: #aaa; border-left-color: #aaa; font-size: 13px; 
+            width: 100%; margin: 6px 0; cursor: pointer; font-family: 'Minecraftia', sans-serif;
+            display: flex; align-items: center; justify-content: flex-start; text-transform: uppercase;
+            box-sizing: border-box;
+        }
+        .btn:hover:not(.btn-disabled) { background: #5a8a2a; border-top-color: #7aba3f; border-left-color: #7aba3f; }
+        .btn-disabled { background: #333 !important; color: #888 !important; border-color: #111 !important; cursor: not-allowed !important; opacity: 0.6; }
+        .btn-icon { width: 35px; text-align: left; font-size: 18px; }
+        
+        .status { margin-top: 15px; padding: 12px; border: 4px solid #fdfd12; background: rgba(0,0,0,0.8); }
+        .win { border-color: #55FF55; color: #55FF55; }
+        .fail-box { border-color: #AA0000; color: #FF5555; background: rgba(85, 0, 0, 0.9); }
+        
+        @keyframes pulse-win { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+        .confetti { position: fixed; font-size: 25px; user-select: none; z-index: 1; pointer-events: none; animation: fall 3s linear forwards; }
+        @keyframes fall { to { transform: translateY(110vh) rotate(360deg); opacity: 0; } }
+        
+        /* Slideshow styles */
+        #slideshow-container {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: #000; z-index: 9999;
+            display: none; opacity: 0; transition: opacity 1s ease-in-out;
+        }
+        #slideshow-container.active { display: block; opacity: 1; }
+        #slideshow-img { width: 100%; height: 100%; object-fit: cover; transition: opacity 1.5s ease-in-out; }
+        #slideshow-img.fade-out { opacity: 0; }
+        .slideshow-clock-container { position: absolute; bottom: 30px; right: 40px; text-align: right; color: white; text-shadow: 2px 2px 8px rgba(0,0,0,0.8); pointer-events: none; }
+        #slideshow-time { font-size: 64px; font-weight: bold; margin-bottom: 5px; color: #ffffff; }
+        #slideshow-date { font-size: 24px; }
+    </style>
+</head>
+<body>
+    <div id="slideshow-container">
+        <img id="slideshow-img" src="" alt="Slideshow">
+        <div class="slideshow-clock-container">
+            <div id="slideshow-time"></div>
+            <div id="slideshow-date"></div>
+        </div>
+    </div>
+    <div id="reloj" class="datetime-display">Cargando...</div>
+    <div class="xp-container">
+        <div class="xp-bar-bg"><div id="xpFill" class="xp-bar-fill"></div></div>
+        <div class="xp-info"><span id="porcentajeTxt">0%</span><span id="faltaPorcentajeTxt">Faltan 100%</span></div>
+        <div class="xp-level" id="tiempoTxt">0min</div>
+    </div>
+    <div class="tareas-counter" id="tareasTxt">MISIONES: 0 / {{ tareas|length }}</div>
+    
+    <div class="container">
+        <h1>TAREAS DIARIAS MATIAS</h1>
+        <div id="contenido">
+            {% for t in tareas %}
+                <button id="btn_{{ loop.index }}" onmouseenter="sonarHover()" onclick="enviarMision('{{ t.nombre }}')" class="btn">
+                    <span class="btn-icon">{{ t.icono }}</span> {{ t.nombre }}
+                </button>
+            {% endfor %}
+            {% if not tareas %}
+                <p style="color: #aaa; font-size: 12px;">No hay misiones activas.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <audio id="audioClic" src="/static/menuclick.mp3" preload="auto"></audio>
+    <audio id="audioMoneda" src="/static/moneda.mp3" preload="auto"></audio>
+    <audio id="audioError" src="/static/error.mp3" preload="auto"></audio>
+    <audio id="audioVictory" src="/static/victory.mp3" preload="auto"></audio>
+
+    <script>
+        let ultimoEstadoProcesado = 'esperando';
+        let finalActivo = false;
+        const aClic = document.getElementById('audioClic');
+        const aMoneda = document.getElementById('audioMoneda');
+        const aError = document.getElementById('audioError');
+        const aVictory = document.getElementById('audioVictory');
+        
+        const mapBotones = {};
+        {% for t in tareas %}
+            mapBotones["{{ t.nombre }}"] = "btn_{{ loop.index }}";
+        {% endfor %}
+
+        function habilitarAudio() {
+            [aClic, aMoneda, aError, aVictory].forEach(a => {
+                a.muted = true;
+                a.play().then(() => { 
+                    a.pause(); 
+                    a.currentTime = 0; 
+                    a.muted = false; 
+                }).catch(e => {});
+            });
+            document.removeEventListener('click', habilitarAudio);
+            document.removeEventListener('touchstart', habilitarAudio);
+        }
+        document.addEventListener('click', habilitarAudio);
+        document.addEventListener('touchstart', habilitarAudio);
+
+        function spawnConfetti() {
+            const emojis = ['🎆', '✨', '💎', '⭐', '🎇'];
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.top = '-5vh';
+            document.body.appendChild(confetti);
+            setTimeout(() => confetti.remove(), 3000);
+        }
+
+        function actualizarReloj() {
+            const ahora = new Date();
+            const fechaStr = ahora.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' });
+            const horaStr = ahora.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            const parpadeo = ahora.getSeconds() % 2 === 0 ? 'opacity: 1;' : 'opacity: 0.5;';
+            document.getElementById('reloj').innerHTML = fechaStr.toUpperCase() + ` <span style='color: #fdfd12; ${parpadeo}'>⌛</span> ` + horaStr;
+            
+            const ssTime = document.getElementById('slideshow-time');
+            const ssDate = document.getElementById('slideshow-date');
+            if (ssTime && ssDate) {
+                ssTime.innerText = horaStr;
+                ssDate.innerText = fechaStr.toUpperCase();
+            }
+        }
+        setInterval(actualizarReloj, 1000);
+
+        function sonarHover() { aClic.currentTime = 0; aClic.play().catch(e => {}); }
+
+        function enviarMision(tarea) {
+            aClic.currentTime = 0;
+            aClic.play().catch(e => {});
+            document.body.classList.remove('fail-mode');
+            document.getElementById('contenido').innerHTML = "<div class='status'>Enviando a Papa...</div>";
+            ultimoEstadoProcesado = 'enviada';
+            fetch('/mandar?tarea=' + encodeURIComponent(tarea));
+        }
+
+        function volverAlMenu() { fetch('/estado_reset').then(() => { location.reload(); }); }
+
+        function pollEstado() {
+            fetch('/estado')
+                .then(res => res.json())
+                .then(data => {
+                    let porcentaje = data.total_tareas > 0 ? Math.round((data.aprobadas.length / data.total_tareas) * 100) : 0;
+                    document.getElementById('xpFill').style.width = Math.min(porcentaje, 100) + "%";
+                    document.getElementById('porcentajeTxt').innerText = porcentaje + "%";
+                    document.getElementById('faltaPorcentajeTxt').innerText = "Faltan " + (100 - porcentaje > 0 ? 100 - porcentaje : 0) + "%";
+                    document.getElementById('tiempoTxt').innerText = data.tiempo_formato;
+                    document.getElementById('tareasTxt').innerText = "MISIONES: " + data.aprobadas.length + " / " + data.total_tareas;
+                    
+                    let p = document.getElementById('contenido');
+
+                    if (data.total_tareas > 0 && data.aprobadas.length === data.total_tareas) {
+                        if(!finalActivo) {
+                            finalActivo = true; 
+                            aVictory.play();
+                            document.body.classList.add('victory-mode');
+                            p.innerHTML = `<div class='status win'><h2 style='color: #fdfd12; font-size: 24px;'>¡META FINAL! 🏆</h2><p style='color: #55FF55;'>${data.total_tareas}/${data.total_tareas} MISIONES LOGRADAS</p></div>`;
+                            setInterval(spawnConfetti, 300);
+                        }
+                    } else {
+                        data.aprobadas.forEach(tarea => {
+                            let id = mapBotones[tarea];
+                            let btn = document.getElementById(id);
+                            if(btn && !btn.classList.contains('btn-disabled')) { 
+                                btn.classList.add('btn-disabled'); 
+                                btn.onclick = null; 
+                            }
+                        });
+                        
+                        if (data.valor === 'aprobada' && ultimoEstadoProcesado !== 'aprobada') {
+                            ultimoEstadoProcesado = 'aprobada';
+                            aMoneda.currentTime = 0; aMoneda.play(); 
+                            document.body.classList.remove('fail-mode'); 
+                            p.innerHTML = "<div class='status win'>LEVEL UP! 🏆<br><br>¡Misión cumplida!</div><br><button onclick='volverAlMenu()' class='btn'><span class='btn-icon'>🔄</span> VOLVER</button>";
+                        } else if (data.valor === 'rechazada' && ultimoEstadoProcesado !== 'rechazada') {
+                            ultimoEstadoProcesado = 'rechazada';
+                            aError.currentTime = 0; aError.play(); 
+                            document.body.classList.add('fail-mode');
+                            p.innerHTML = "<div class='status fail-box'>RECHAZADO ❌</div><br><button onclick='volverAlMenu()' class='btn'><span class='btn-icon'>🏹</span> REINTENTAR</button>";
+                        }
+                    }
+                    setTimeout(pollEstado, 1500);
+                })
+                .catch(error => { setTimeout(pollEstado, 3000); });
+        }
+        pollEstado(); 
+
+        // --- SLIDESHOW LOGIC ---
+        let timeoutInactivity;
+        let slideshowInterval;
+        const TIME_INACTIVITY = 60000; // 60 segundos
+        let isSlideshowActive = false;
+        let imagesList = [];
+        let currentImageIndex = 0;
+
+        function resetInactivityTimer() {
+            if (isSlideshowActive) {
+                hideSlideshow();
+            }
+            clearTimeout(timeoutInactivity);
+            timeoutInactivity = setTimeout(startSlideshow, TIME_INACTIVITY);
+        }
+
+        function hideSlideshow() {
+            isSlideshowActive = false;
+            let container = document.getElementById('slideshow-container');
+            container.classList.remove('active');
+            setTimeout(() => {
+                if(!isSlideshowActive) container.style.display = 'none';
+            }, 1000);
+            clearInterval(slideshowInterval);
+        }
+
+        function startSlideshow() {
+            fetch('/api/slideshow_images')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.images && data.images.length > 0) {
+                        imagesList = data.images;
+                        currentImageIndex = 0;
+                        document.getElementById('slideshow-img').src = imagesList[currentImageIndex];
+                        
+                        let container = document.getElementById('slideshow-container');
+                        container.style.display = 'block';
+                        void container.offsetWidth; // force reflow
+                        container.classList.add('active');
+                        
+                        isSlideshowActive = true;
+                        
+                        slideshowInterval = setInterval(() => {
+                            let imgElement = document.getElementById('slideshow-img');
+                            imgElement.classList.add('fade-out');
+                            setTimeout(() => {
+                                currentImageIndex = (currentImageIndex + 1) % imagesList.length;
+                                imgElement.src = imagesList[currentImageIndex];
+                                imgElement.classList.remove('fade-out');
+                            }, 1500);
+                        }, 60000);
+                    }
+                })
+                .catch(err => console.log("Error loading slideshow images", err));
+        }
+
+        ['mousemove', 'mousedown', 'keypress', 'touchstart', 'scroll'].forEach(evt => {
+            document.addEventListener(evt, resetInactivityTimer, true);
+        });
+
+        resetInactivityTimer();
+    </script>
+</body>
+</html>

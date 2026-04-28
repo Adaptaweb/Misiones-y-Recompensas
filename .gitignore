@@ -1,0 +1,5 @@
+.env
+datos_cajero.json
+__pycache__/
+.vs/
+.vscode/

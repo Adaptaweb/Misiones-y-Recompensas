@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Tareas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: Arial, sans-serif; background: #222; color: white; padding: 20px; text-align: center; }
+        .container { max-width: 600px; margin: 0 auto; background: #333; padding: 20px; border-radius: 8px; }
+        .task-list { list-style: none; padding: 0; }
+        .task-item { display: flex; justify-content: space-between; align-items: center; background: #444; margin: 5px 0; padding: 10px; border-radius: 4px; }
+        .btn-del { background: #aa0000; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; }
+        .form-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; justify-content: center; }
+        input { padding: 10px; border-radius: 4px; border: none; }
+        .btn-add { background: #2a8a2a; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
+        a { color: #55FF55; text-decoration: none; display: block; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Panel de Control de Misiones</h2>
+        <ul class="task-list">
+            {% for t in tareas %}
+                <li class="task-item">
+                    <span>{{ t.icono }} {{ t.nombre }}</span>
+                    <button class="btn-del" onclick="quitarTarea('{{ t.nombre }}')">Eliminar</button>
+                </li>
+            {% endfor %}
+        </ul>
+        
+        <div class="form-group">
+            <input type="text" id="icono_nuevo" placeholder="Icono (ej: 🚀)" style="width: 80px;">
+            <input type="text" id="nombre_nuevo" placeholder="Nombre de la Misión" style="flex-grow: 1; min-width: 150px;">
+            <button class="btn-add" onclick="agregarTarea()">Agregar</button>
+        </div>
+        
+        <a href="/">Volver a la vista de Matías</a>
+    </div>
+
+    <script>
+        function quitarTarea(nombre) {
+            if(!confirm("¿Eliminar misión: " + nombre + "?")) return;
+            fetch('/modificar_tareas', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({accion: 'quitar', nombre: nombre})
+            }).then(() => location.reload());
+        }
+
+        function agregarTarea() {
+            const nombre = document.getElementById('nombre_nuevo').value.trim();
+            const icono = document.getElementById('icono_nuevo').value.trim() || '📌'; 
+            if(!nombre) return;
+            fetch('/modificar_tareas', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({accion: 'agregar', nombre: nombre, icono: icono})
+            }).then(() => location.reload());
+        }
+    </script>
+</body>
+</html>
