@@ -54,26 +54,13 @@ docker run -d -p 5000:5000 --name mati-tareas bank-craft
 💡 Idea Creativa: Evolución a Mobile App
 Este proyecto nace como un MVP (Producto Mínimo Viable) con un gran potencial de escalabilidad en el sector EdTech:
 
-Multi-Skin: Capacidad de cambiar la temática (Roblox, Lego, Super Mario).
-
-Economía Digital: Una billetera virtual de tiempo para que los niños "paguen" sus horas de juego.
-
-Prueba de Trabajo: Integración de la cámara para que el niño suba una foto de la tarea terminada antes de enviar la notificación al padre.
 
 👤 Autor
-Alejandro Tamayo - Desarrollador y Analista de Soporte - [Tu GitHub Profile]
+Alejandro Tamayo - Desarrollador y Analista de Soporte - [[Tu GitHub Profile](https://github.com/Adaptaweb)]
 
 Proyecto desarrollado con fines educativos y de organización familiar.
 
 
 ---
 
-### ¿Cómo agregarlo desde Windows?
-1. En tu carpeta, haz clic derecho -> **Nuevo** -> **Documento de texto**.
-2. Nómbralo `README.md` (asegúrate de borrar la extensión `.txt`).
-3. Abre el archivo con el Bloc de notas o VS Code, pega el código de arriba y guarda.
-4. En la terminal de Git, haz:
-   ```powershell
-   git add README.md
-   git commit -m "Añadido README profesional"
-   git push
+}
