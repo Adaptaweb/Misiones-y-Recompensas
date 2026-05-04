@@ -7,6 +7,7 @@ import time
 import os
 import json
 from datetime import datetime
+import sqlite3
 
 # Cargar variables de entorno
 load_dotenv()
@@ -16,9 +17,10 @@ app = Flask(__name__)
 # --- CONFIGURACION ---
 TOKEN = os.environ.get("TELEGRAM_TOKEN")
 CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
-IP_HA = "192.168.1.99" 
+IP_HA = "192.168.3.99" 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 JSON_FILE = os.path.join(BASE_DIR, "datos_cajero.json")
+DB_FILE = os.path.join(BASE_DIR, "datos_cajero.db")
 
 if not TOKEN or not CHAT_ID:
     print("⚠️ ADVERTENCIA: No se encontró TELEGRAM_TOKEN o CHAT_ID en el archivo .env")
@@ -27,50 +29,96 @@ if not TOKEN or not CHAT_ID:
 estado_mision = "esperando"
 tiempo_hoy = 0
 tareas_aprobadas = []
-
-# Lista dinámica de tareas con sus iconos
-tareas_activas = [
-    {"nombre": "Hacer la Cama", "icono": "🛏️"},
-    {"nombre": "Lavarse los dientes", "icono": "🪥"},
-    {"nombre": "Ordenar la Pieza", "icono": "📦"},
-    {"nombre": "Recoger la Ropa sucia", "icono": "👕"},
-    {"nombre": "Ayuda a regar las plantas", "icono": "🌻"},
-    {"nombre": "Darle comida y agua a los perros", "icono": "🦴"},
-    {"nombre": "Bañarse", "icono": "🚿"}
-]
-
+tareas_activas = []
 fecha_actual = str(datetime.now().date())
 state_lock = threading.Lock() 
 
-# --- PERSISTENCIA (JSON) ---
-def guardar_datos():
-    try:
-        data = {
-            "fecha": str(datetime.now().date()), 
-            "tiempo": tiempo_hoy, 
-            "aprobadas": tareas_aprobadas,
-            "activas": tareas_activas
-        }
-        with open(JSON_FILE, 'w') as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
-    except Exception as e:
-        print(f"Error al guardar JSON: {e}")
+# --- PERSISTENCIA (SQLite) ---
+def init_db():
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS tareas_activas
+                 (nombre TEXT PRIMARY KEY, icono TEXT)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS estado_actual
+                 (id INTEGER PRIMARY KEY, fecha TEXT, tiempo_hoy INTEGER, tareas_aprobadas TEXT)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS historial_diario
+                 (fecha TEXT PRIMARY KEY, tiempo_ganado INTEGER, tareas_completadas TEXT)''')
+    
+    # Migrar desde JSON si existe y la DB está vacía
+    c.execute('SELECT COUNT(*) FROM estado_actual')
+    if c.fetchone()[0] == 0:
+        if os.path.exists(JSON_FILE):
+            try:
+                with open(JSON_FILE, 'r') as f:
+                    data = json.load(f)
+                    fecha = data.get("fecha", str(datetime.now().date()))
+                    tiempo = data.get("tiempo", 0)
+                    aprobadas = json.dumps(data.get("aprobadas", []))
+                    c.execute("INSERT INTO estado_actual (id, fecha, tiempo_hoy, tareas_aprobadas) VALUES (1, ?, ?, ?)", 
+                              (1, fecha, tiempo, aprobadas))
+                    
+                    activas = data.get("activas", [])
+                    for t in activas:
+                        c.execute("INSERT OR IGNORE INTO tareas_activas (nombre, icono) VALUES (?, ?)", (t['nombre'], t.get('icono', '📌')))
+            except Exception as e:
+                print(f"Error migrando JSON: {e}")
+        else:
+            # Estado inicial por defecto
+            c.execute("INSERT INTO estado_actual (id, fecha, tiempo_hoy, tareas_aprobadas) VALUES (1, ?, 0, '[]')", (str(datetime.now().date()),))
+            # Insertar tareas por defecto
+            tareas_defecto = [
+                {"nombre": "Hacer la Cama", "icono": "🛏️"},
+                {"nombre": "Lavarse los dientes", "icono": "🪥"},
+                {"nombre": "Ordenar la Pieza", "icono": "📦"},
+                {"nombre": "Recoger la Ropa sucia", "icono": "👕"},
+                {"nombre": "Ayuda a regar las plantas", "icono": "🌻"},
+                {"nombre": "Darle comida y agua a los perros", "icono": "🦴"},
+                {"nombre": "Bañarse", "icono": "🚿"}
+            ]
+            for t in tareas_defecto:
+                c.execute("INSERT OR IGNORE INTO tareas_activas (nombre, icono) VALUES (?, ?)", (t['nombre'], t['icono']))
+    conn.commit()
+    conn.close()
+
+init_db()
 
 def cargar_datos():
     global tiempo_hoy, tareas_aprobadas, fecha_actual, tareas_activas
-    if os.path.exists(JSON_FILE):
-        try:
-            with open(JSON_FILE, 'r') as f:
-                data = json.load(f)
-                if data.get("fecha") == str(datetime.now().date()):
-                    tiempo_hoy = data.get("tiempo", 0)
-                    tareas_aprobadas = data.get("aprobadas", [])
-                    fecha_actual = data.get("fecha")
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        c = conn.cursor()
+        c.execute("SELECT fecha, tiempo_hoy, tareas_aprobadas FROM estado_actual WHERE id = 1")
+        row = c.fetchone()
+        if row:
+            fecha_actual = row[0]
+            tiempo_hoy = row[1]
+            tareas_aprobadas = json.loads(row[2])
+            
+            # Si el dia en la DB es distinto al de hoy, forzamos un reset (prevención)
+            if fecha_actual != str(datetime.now().date()):
+                # No hacemos el reset aquí directamente, dejamos que revisar_reinicio_diario se encargue
+                pass
                 
-                if "activas" in data:
-                    tareas_activas = data.get("activas")
-        except Exception as e:
-            print(f"Error al cargar JSON: {e}")
+        c.execute("SELECT nombre, icono FROM tareas_activas")
+        tareas_activas = [{"nombre": r[0], "icono": r[1]} for r in c.fetchall()]
+        conn.close()
+    except Exception as e:
+        print(f"Error al cargar DB: {e}")
+
+def guardar_datos():
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        c = conn.cursor()
+        c.execute("UPDATE estado_actual SET fecha = ?, tiempo_hoy = ?, tareas_aprobadas = ? WHERE id = 1",
+                  (fecha_actual, tiempo_hoy, json.dumps(tareas_aprobadas)))
+        
+        c.execute("DELETE FROM tareas_activas")
+        for t in tareas_activas:
+            c.execute("INSERT INTO tareas_activas (nombre, icono) VALUES (?, ?)", (t['nombre'], t['icono']))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Error al guardar DB: {e}")
 
 cargar_datos()
 
@@ -79,6 +127,17 @@ def revisar_reinicio_diario():
     hoy = str(datetime.now().date())
     with state_lock:
         if hoy != fecha_actual:
+            try:
+                conn = sqlite3.connect(DB_FILE)
+                c = conn.cursor()
+                # Guardar el historial de ayer
+                c.execute("INSERT OR REPLACE INTO historial_diario (fecha, tiempo_ganado, tareas_completadas) VALUES (?, ?, ?)",
+                          (fecha_actual, tiempo_hoy, json.dumps(tareas_aprobadas)))
+                conn.commit()
+                conn.close()
+            except Exception as e:
+                print(f"Error al guardar historial: {e}")
+
             tareas_aprobadas, tiempo_hoy, fecha_actual = [], 0, hoy
             guardar_datos()
             print("🔄 Nuevo día detectado: Misiones reiniciadas.")
@@ -122,6 +181,29 @@ def home():
 @app.route('/admin')
 def admin_panel():
     return render_template('admin.html', tareas=tareas_activas)
+
+@app.route('/historial')
+def historial():
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        c = conn.cursor()
+        c.execute("SELECT fecha, tiempo_ganado, tareas_completadas FROM historial_diario ORDER BY fecha DESC")
+        registros = c.fetchall()
+        conn.close()
+        
+        historial_data = []
+        for r in registros:
+            historial_data.append({
+                "fecha": r[0],
+                "tiempo_ganado": r[1],
+                "tareas_completadas": json.loads(r[2]),
+                "tiempo_formato": formato_tiempo(r[1])
+            })
+    except Exception as e:
+        print(f"Error al leer historial: {e}")
+        historial_data = []
+        
+    return render_template('historial.html', historial=historial_data)
 
 @app.route('/modificar_tareas', methods=['POST'])
 def modificar_tareas():

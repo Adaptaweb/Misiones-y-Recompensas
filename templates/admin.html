@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <title>Admin - Tareas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/css/themes.css">
     <style>
-        body { font-family: Arial, sans-serif; background: #222; color: white; padding: 20px; text-align: center; }
-        .container { max-width: 600px; margin: 0 auto; background: #333; padding: 20px; border-radius: 8px; }
+        
+        body { font-family: Arial, sans-serif; background: #222; color: white; padding: 20px; text-align: center; transition: all 0.5s; }
+        .container { max-width: 600px; margin: 0 auto; background: #333; padding: 20px; border-radius: 8px; transition: all 0.5s; }
         .task-list { list-style: none; padding: 0; }
         .task-item { display: flex; justify-content: space-between; align-items: center; background: #444; margin: 5px 0; padding: 10px; border-radius: 4px; }
         .btn-del { background: #aa0000; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; }
@@ -34,10 +36,19 @@
             <button class="btn-add" onclick="agregarTarea()">Agregar</button>
         </div>
         
-        <a href="/">Volver a la vista de Matías</a>
+        <div style="margin-top: 30px; display: flex; justify-content: space-around;">
+            <a href="/historial">📜 Ver Historial Diario</a>
+            <a href="/">🔙 Volver a la vista de Matías</a>
+        </div>
     </div>
 
     <script>
+        // Aplicar tema
+        const savedTheme = localStorage.getItem('temaMatias');
+        if (savedTheme === 'mario') {
+            document.body.classList.add('theme-mario');
+        }
+
         function quitarTarea(nombre) {
             if(!confirm("¿Eliminar misión: " + nombre + "?")) return;
             fetch('/modificar_tareas', {

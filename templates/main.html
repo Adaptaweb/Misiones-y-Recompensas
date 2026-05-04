@@ -5,11 +5,13 @@
     <title>Tareas Matias</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
+    <link rel="stylesheet" href="/static/css/themes.css">
     <style>
         @import url('https://fonts.cdnfonts.com/css/minecraftia');
+
         body { 
             font-family: 'Minecraftia', sans-serif; text-align: center; 
-            background-image: url('/static/fondo_titulo.webp'); background-size: cover;
+            background-image: url('/static/minecraft/fondo_titulo.webp'); background-size: cover;
             background-position: center; background-attachment: fixed; background-color: #333;
             color: white; text-shadow: 2px 2px #000;
             margin: 0; padding: 30px 10px; box-sizing: border-box;
@@ -68,6 +70,12 @@
     </style>
 </head>
 <body>
+    <div class="theme-selector">
+        <select id="themeSelect" onchange="cambiarTema(this.value)">
+            <option value="minecraft">Tema: Minecraft</option>
+            <option value="mario">Tema: Mario Bros</option>
+        </select>
+    </div>
     <div id="slideshow-container">
         <img id="slideshow-img" src="" alt="Slideshow">
         <div class="slideshow-clock-container">
@@ -97,10 +105,10 @@
         </div>
     </div>
 
-    <audio id="audioClic" src="/static/menuclick.mp3" preload="auto"></audio>
-    <audio id="audioMoneda" src="/static/moneda.mp3" preload="auto"></audio>
-    <audio id="audioError" src="/static/error.mp3" preload="auto"></audio>
-    <audio id="audioVictory" src="/static/victory.mp3" preload="auto"></audio>
+    <audio id="audioClic" src="/static/minecraft/menuclick.mp3" preload="auto"></audio>
+    <audio id="audioMoneda" src="/static/minecraft/moneda.mp3" preload="auto"></audio>
+    <audio id="audioError" src="/static/minecraft/error.mp3" preload="auto"></audio>
+    <audio id="audioVictory" src="/static/minecraft/victory.mp3" preload="auto"></audio>
 
     <script>
         let ultimoEstadoProcesado = 'esperando';
@@ -110,6 +118,35 @@
         const aError = document.getElementById('audioError');
         const aVictory = document.getElementById('audioVictory');
         
+        const soundsMap = {
+            minecraft: { click: '/static/minecraft/menuclick.mp3', coin: '/static/minecraft/moneda.mp3', error: '/static/minecraft/error.mp3', victory: '/static/minecraft/victory.mp3' },
+            mario: { click: '/static/mario/mario_click.mp3', coin: '/static/mario/mario_coin.mp3', error: '/static/mario/mario_error.mp3', victory: '/static/mario/mario_victory.mp3' }
+        };
+
+        function aplicarTema(tema) {
+            document.body.classList.remove('theme-mario');
+            if (tema === 'mario') { document.body.classList.add('theme-mario'); }
+            
+            aClic.src = soundsMap[tema].click;
+            aMoneda.src = soundsMap[tema].coin;
+            aError.src = soundsMap[tema].error;
+            aVictory.src = soundsMap[tema].victory;
+            
+            [aClic, aMoneda, aError, aVictory].forEach(a => a.load());
+            
+            const sel = document.getElementById('themeSelect');
+            if (sel) sel.value = tema;
+            localStorage.setItem('temaMatias', tema);
+        }
+
+        function cambiarTema(tema) {
+            aplicarTema(tema);
+            aClic.currentTime = 0; aClic.play().catch(e => {});
+        }
+
+        const savedTheme = localStorage.getItem('temaMatias') || 'minecraft';
+        aplicarTema(savedTheme);
+
         const mapBotones = {};
         {% for t in tareas %}
             mapBotones["{{ t.nombre }}"] = "btn_{{ loop.index }}";

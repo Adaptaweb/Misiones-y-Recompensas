@@ -1,0 +1,121 @@
+/* ==================================================
+   FUENTES LOCALES (MARIO BROS)
+   ================================================== */
+@font-face {
+    font-family: 'SuperMario';
+    src: url('/static/mario/SuperMario256.ttf') format('truetype');
+}
+@font-face {
+    font-family: 'SuperMario2';
+    src: url('/static/mario/RetroMario.otf') format('opentype');
+}
+
+/* ==================================================
+   SELECTOR DE TEMA
+   ================================================== */
+.theme-selector {
+    position: absolute; 
+    top: 10px; 
+    right: 10px; 
+    z-index: 100;
+}
+.theme-selector select {
+    background: rgba(0,0,0,0.7); 
+    color: white; 
+    border: 2px solid #555; 
+    padding: 8px; 
+    font-family: inherit; 
+    cursor: pointer; 
+    border-radius: 4px;
+    font-size: 12px;
+    outline: none;
+}
+
+/* ==================================================
+   TEMA: MARIO BROS (GLOBAL)
+   ================================================== */
+body.theme-mario {
+    font-family: 'SuperMario', 'SuperMario2', sans-serif;
+    background-image: url('/static/mario/fondo_mario.jpg');
+    background-color: #5C94FC;
+    text-shadow: 2px 2px #000;
+        border-radius: 20px;
+
+}
+body.theme-mario .theme-selector select { 
+    border-color: #FBD000; 
+    font-family: 'SuperMario', 'SuperMario2', sans-serif; 
+    font-size: 12px; 
+    background-color: #ffffff;
+    color: rgba(229, 37, 33, 0.85);
+}
+
+/* CONTENEDOR PRINCIPAL Y PANELES */
+body.theme-mario .container {
+    background: rgba(229, 37, 33, 0.85); /* Rojo */
+    border-color: #FBD000; /* Amarillo */
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+    border-radius: 20px;
+}
+body.theme-mario h1, 
+body.theme-mario h2 { 
+    color: #FBD000; 
+    text-shadow: 3px 3px #000; 
+}
+body.theme-mario h1 { font-size: 24px; }
+body.theme-mario h2 { font-size: 24px; margin-bottom: 30px; }
+
+/* BOTONES GLOBALES (MAIN, ADMIN, HISTORIAL) */
+body.theme-mario .btn,
+body.theme-mario .btn-add,
+body.theme-mario .btn-del {
+    background: #FFFFFF; /* Blanco */
+    text-shadow: none;
+    border: 2px solid #000;
+    font-family: 'SuperMario', 'SuperMario2', sans-serif;
+    border-radius: 20px;
+}
+body.theme-mario .btn {
+    color: #E52521;
+    border-top-color: #FFF;
+    border-left-color: #FFF;
+    font-size: 18px;
+    padding: 15px 10px;
+        border-radius: 20px;
+
+}
+body.theme-mario .btn-add { color: #43B047; font-size: 14px; padding: 10px 20px; cursor: pointer; }
+body.theme-mario .btn-del { color: #E52521; font-size: 14px; padding: 5px 10px; cursor: pointer; }
+
+body.theme-mario .btn:hover:not(.btn-disabled),
+body.theme-mario .btn-add:hover,
+body.theme-mario .btn-del:hover {
+    background: #FBD000;
+    border-top-color: #EEE;
+    border-left-color: #EEE;
+}
+body.theme-mario .btn:hover:not(.btn-disabled) { color: #AA0000; }
+body.theme-mario .btn-disabled { background: #CCC !important; color: #888 !important; }
+
+/* ELEMENTOS ESPECÍFICOS DE MAIN */
+body.theme-mario .status { border-color: #FBD000; font-size: 16px; border-radius: 20px;}
+body.theme-mario .win { color: #FBD000; }
+body.theme-mario .fail-box { background: rgba(229, 37, 33, 0.95); color: white; border-color: #000; }
+body.theme-mario.victory-mode .container { box-shadow: 0 0 30px #FBD000, inset 0 0 20px #FBD000; }
+body.theme-mario .xp-bar-fill { background: #FBD000; box-shadow: 0 0 10px #FBD000; }
+body.theme-mario .xp-info, body.theme-mario .xp-level { color: #FBD000; }
+body.theme-mario .tareas-counter { color: #FFFFFF; font-size: 32px; }
+body.theme-mario .datetime-display { font-family: 'SuperMario', 'SuperMario2', sans-serif; font-size: 24px; }
+
+/* ELEMENTOS ESPECÍFICOS DE ADMIN */
+body.theme-mario .task-item { background: rgba(255, 255, 255, 0.5); }
+body.theme-mario input { font-family: 'SuperMario', 'SuperMario2', sans-serif; font-size: 14px; border: 2px solid #000; padding: 10px; border-radius: 4px; }
+body.theme-mario a { color: #FBD000; text-shadow: 2px 2px #000; font-size: 14px; margin-top: 25px; }
+
+/* ELEMENTOS ESPECÍFICOS DE HISTORIAL */
+body.theme-mario .historial-item { background: rgba(0,0,0,0.6); border-color: #FBD000; }
+body.theme-mario .historial-header { border-bottom-color: #FBD000; }
+body.theme-mario .historial-fecha { color: #43B047; font-size: 14px; }
+body.theme-mario .historial-tiempo { color: #FBD000; font-size: 14px; }
+body.theme-mario .historial-tareas { font-size: 14px; color: #FFF; }
+body.theme-mario .no-data { font-size: 14px; color: #FFF; line-height: 1.5; }
