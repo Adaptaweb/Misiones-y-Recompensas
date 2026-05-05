@@ -62,6 +62,8 @@ def init_db():
                         c.execute("INSERT OR IGNORE INTO tareas_activas (nombre, icono) VALUES (?, ?)", (t['nombre'], t.get('icono', '📌')))
             except Exception as e:
                 print(f"Error migrando JSON: {e}")
+                # Fallback si falla migración
+                c.execute("INSERT INTO estado_actual (id, fecha, tiempo_hoy, tareas_aprobadas) VALUES (1, ?, 0, '[]')", (str(datetime.now().date()),))
         else:
             # Estado inicial por defecto
             c.execute("INSERT INTO estado_actual (id, fecha, tiempo_hoy, tareas_aprobadas) VALUES (1, ?, 0, '[]')", (str(datetime.now().date()),))
@@ -109,7 +111,7 @@ def guardar_datos():
     try:
         conn = sqlite3.connect(DB_FILE)
         c = conn.cursor()
-        c.execute("UPDATE estado_actual SET fecha = ?, tiempo_hoy = ?, tareas_aprobadas = ? WHERE id = 1",
+        c.execute("INSERT OR REPLACE INTO estado_actual (id, fecha, tiempo_hoy, tareas_aprobadas) VALUES (1, ?, ?, ?)",
                   (fecha_actual, tiempo_hoy, json.dumps(tareas_aprobadas)))
         
         c.execute("DELETE FROM tareas_activas")
