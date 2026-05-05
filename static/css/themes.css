@@ -38,9 +38,10 @@ body.theme-mario {
     font-family: 'SuperMario', 'SuperMario2', sans-serif;
     background-image: url('/static/mario/fondo_mario.jpg');
     background-color: #5C94FC;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
     text-shadow: 2px 2px #000;
-        border-radius: 20px;
-
 }
 body.theme-mario .theme-selector select { 
     border-color: #FBD000; 
